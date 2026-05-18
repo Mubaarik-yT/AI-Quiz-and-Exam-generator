@@ -1413,10 +1413,7 @@
 
   <script>
     // ==================== CONFIG ====================
-    const GROQ_API_KEY = 'YOUR_GROQ_API_KEY'; // Replace with your actual Groq API key or fetch dynamically
-    const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-    const GROQ_MODEL = 'qwen/qwen3-32b';
-
+    // API constants have been moved to the backend for security
     // ==================== STATE ====================
     const S = {
       questions: [],
@@ -1781,36 +1778,7 @@
       });
     }
 
-    // ==================== GROQ DIRECT API CALL ====================
-    async function callGroq(systemPrompt, userPrompt) {
-      const response = await fetch(GROQ_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROQ_API_KEY
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.5,
-          max_tokens: 4000,
-          response_format: { type: 'json_object' }
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        const msg = (data.error && data.error.message) || ('Groq API error ' + response.status);
-        throw new Error(msg);
-      }
-
-      let content = data.choices[0].message.content.trim();
-      content = content.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
-      return JSON.parse(content);
-    }
+    // Groq direct API call removed; use backend endpoints instead
 
     // ==================== GENERATE FROM TOPIC ====================
     async function generateFromTopic() {
@@ -1841,36 +1809,21 @@
       btn.innerHTML = '<div class="spinner"></div> Groq AI is thinking…';
       showOverlay('Generating quiz about: ' + topic);
 
-      const systemPrompt = `You are a highly intelligent, academically rigorous quiz generator. Your absolute highest priority is FACTUAL ACCURACY. Every correct answer must be indisputably true. Always respond with valid JSON only. No markdown, no explanation outside JSON.`;
-
-      const userPrompt = `Generate exactly ${count} quiz questions about: "${topic}".
-Difficulty: ${diff}
-Question types to use: ${types.join(', ')}
-
-STRICT RULES FOR FACTUAL CORRECTNESS AND RANDOMNESS:
-1. FACTUAL CORRECTNESS: You must restrictly ensure the correctness of every question. For True/False, the answer MUST be factually accurate. For Short Answer, provide a highly accurate and concise model answer.
-2. RANDOMIZATION: For MCQs, the correct answer MUST be completely randomly distributed among options A, B, C, and D. Do not default to A. Make the incorrect options (distractors) highly plausible but factually incorrect.
-3. MCQ FORMAT: exactly 4 options like ["A) ...", "B) ...", "C) ...", "D) ..."], correctAnswer must match one option exactly.
-4. T/F FORMAT: options: ["True", "False"]. Restrictly ensure the correct answer is absolutely accurate.
-5. SHORT ANSWER FORMAT: options: []. Provide a precise model answer.
-6. EXPLANATION: Include a brief, fact-based explanation for every question proving why the answer is correct.
-
-Return ONLY this JSON structure:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "mcq",
-      "question": "Question text",
-      "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
-      "correctAnswer": "A) option1",
-      "explanation": "Brief reason"
-    }
-  ]
-}`;
-
       try {
-        const data = await callGroq(systemPrompt, userPrompt);
+        const response = await fetch('http://127.0.0.1:5000/api/generate/topic', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            difficulty: diff,
+            count: count,
+            include_mcq: mcq,
+            include_tf: tf,
+            include_short: short
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
         if (!data.questions || !data.questions.length) throw new Error('No questions returned. Try a different topic.');
         S.questions = data.questions;
         S.score = { correct: 0, incorrect: 0 };
@@ -1918,40 +1871,18 @@ Return ONLY this JSON structure:
       btn.innerHTML = '<div class="spinner"></div> Analyzing content…';
       showOverlay('Analyzing your material and generating questions…');
 
-      const systemPrompt = `You are a highly intelligent, academically rigorous quiz generator. Your absolute highest priority is FACTUAL ACCURACY based STRICTLY on the provided text. Every correct answer must be indisputably proven by the text. Always respond with valid JSON only. No markdown.`;
-
-      const userPrompt = `STUDY MATERIAL:
-"""
-${truncated}
-"""
-
-Based STRICTLY on the above material, generate exactly ${count} quiz questions at ${diff} difficulty.
-Mix types: mcq, true-false, short-answer.
-
-STRICT RULES FOR FACTUAL CORRECTNESS AND RANDOMNESS:
-1. FACTUAL CORRECTNESS: You must restrictly ensure the correctness of every question. You cannot invent facts. Every correct answer must be found in the text.
-2. RANDOMIZATION: For MCQs, the correct answer MUST be completely randomly distributed among options A, B, C, and D. Do not default to A. Distractors must be plausible but definitively incorrect based on the text.
-3. MCQ FORMAT: exactly 4 options like ["A) ...", "B) ...", "C) ...", "D) ..."]. correctAnswer MUST match one option exactly.
-4. T/F FORMAT: options: ["True", "False"]. Restrictly ensure the correct answer is absolutely accurate according to the text.
-5. SHORT ANSWER FORMAT: options: []. Provide a precise model answer found in the text.
-6. EXPLANATION: Include a brief explanation proving why the answer is correct using details from the text.
-
-Return ONLY this JSON:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "mcq",
-      "question": "...",
-      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-      "correctAnswer": "A) ...",
-      "explanation": "Found in the material: ..."
-    }
-  ]
-}`;
-
       try {
-        const data = await callGroq(systemPrompt, userPrompt);
+        const response = await fetch('http://127.0.0.1:5000/api/generate/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: content,
+            difficulty: diff,
+            count: count
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
         if (!data.questions || !data.questions.length) throw new Error('Could not generate questions. Try with more detailed material.');
         S.questions = data.questions;
         S.score = { correct: 0, incorrect: 0 };
