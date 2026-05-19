@@ -1,21 +1,46 @@
-# AI-Quiz-and-Exam-generator
+# AI Quiz and Exam Generator (SmartExam AI)
 
-Group names:
-1. Muubaarik Cabdirisaaq
-2. Sacat Abdilaahi Omar  
-3. Maxamed Xasan Raage 
-4. Sakariye Abdirixmaan Cumar 
-5. Cabdicasiis Aadam Farah Ismail
+SmartExam AI is a powerful, AI-driven quiz and exam generator. It uses a Flask backend integrated with the Groq API to create dynamic quizzes from either a specific topic or provided study material. The application supports various question types, including multiple-choice, true/false, and short-answer questions.
+
+## How to Run the Project
+
+Follow these steps to run the project locally on your machine:
+
+### 1. Prerequisites
+Make sure you have Python installed. You will also need to install the required Python packages.
+
+Open your terminal in the project folder and run:
+```bash
+pip install flask flask-cors requests python-dotenv
+```
+
+### 2. Configure the Environment
+Create a `.env` file in the root directory of the project, and add your Groq API key:
+```env
+GROQ_API_KEY=your_actual_api_key_here
+```
+
+### 3. Start the Backend Server
+Run the Flask application from your terminal:
+```bash
+python app.py
+```
+The backend server will start running at `http://localhost:5000`.
+
+### 4. Open the Frontend
+Open the `index.html` file in any modern web browser to access the user interface and start generating quizzes.
+
+---
+
+## Group 03 Members
+1. Cabdicasiis Aadam Farah Ismail 
+2. Maxamed Xasan Raage 
+3. Sakariye Abdirixmaan Cumar 
+4. Mubaarik Cabdirisaaq 
+5. Sacat Abdilaahi Omar 
 6. Abdiqaadir Nour Saleban 
 7. Ahmed Hassan Muhumed 
 8. Clrisaaq Ahmed mahamed 
 9. Amin Abshir
 
-   HOW TO RUN
-
-   - go to app.py run terminal python app.py
-   - it show you in the web browser
-
-     NOTE:
-     - GitHub is blocking our push because GitHub Secret Scanning detected a live  API Key hardcoded in our recent commit  across three files: app.py, index.html, and test_models.py. This is a built-in safety feature to stop you from accidentally leaking your private keys to the public.
-     - SO Add it to Your specidic API
+     
